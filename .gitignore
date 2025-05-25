@@ -2,3 +2,4 @@ venv
 gemini_api.txt
 .env
 .vercel
+__pycache__
