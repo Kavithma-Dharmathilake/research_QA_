@@ -1,0 +1,4 @@
+venv
+gemini_api.txt
+.env
+.vercel
