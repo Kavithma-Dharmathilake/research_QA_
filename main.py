@@ -76,22 +76,22 @@ async def upload_resume(
 
     except Exception as e:
         return {"error": str(e)}
-
+    
 @app.post("/setid/{fid}")
-async def setcandidateid( fid: str, norm:str):
+async def setcandidateid(fid: str):
     try:
-        candidate = {
-            "fid": fid,
-            "norm": norm
-        }
+        result = await candidate_collection.update_one(
+            {"norm": "1"},
+            {"$set": {"fid": fid}}
+        )
 
-        # Insert into MongoDB
-        result = await candidate_collection.insert_one(candidate)
-        return {"message": "candidate stored successfully", "id": str(result.inserted_id)}
+        if result.matched_count == 0:
+            return {"message": "No candidate found with the given norm."}
+
+        return {"message": "Candidate fid updated successfully."}
 
     except Exception as e:
         return {"error": str(e)}
-
 
 @app.get("/get-resume/{fid}")
 async def get_resume(fid: str):
