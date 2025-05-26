@@ -19,6 +19,7 @@ MONGO_URL = os.getenv("MONGO_URL")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client["ai_hiring"]
 resume_collection = db.get_collection("resumes")
+candidate_collection = db.get_collection("candidate")
 
 
 # Allow requests from your frontend
@@ -75,6 +76,22 @@ async def upload_resume(
 
     except Exception as e:
         return {"error": str(e)}
+
+@app.post("/setid/{fid}")
+async def setcandidateid( fid: str, norm:str):
+    try:
+        candidate = {
+            "fid": fid,
+            "norm": norm
+        }
+
+        # Insert into MongoDB
+        result = await candidate_collection.insert_one(candidate)
+        return {"message": "candidate stored successfully", "id": str(result.inserted_id)}
+
+    except Exception as e:
+        return {"error": str(e)}
+
 
 @app.get("/get-resume/{fid}")
 async def get_resume(fid: str):
@@ -313,12 +330,14 @@ async def generate_question(projects, experience, name, candidate_response=None)
 #     return question
 
 
-@app.post("/interview/{fid}")
-async def interview(fid: str):
+@app.post("/interview")
+async def interview():
     """
     Conducts an AI interview chat based on the candidate's resume and company job role/requirements.
     Returns 5 JSON questions in sequence.
     """
+    candidate = await candidate_collection.find_one({"norm":"1"})
+    fid = candidate.get("fid","candidate id")
     resume = await resume_collection.find_one({"fid": fid})
 
     if not resume:
@@ -394,3 +413,4 @@ async def get_all_resumes():
 
     except Exception as e:
         return {"error": str(e)}
+
