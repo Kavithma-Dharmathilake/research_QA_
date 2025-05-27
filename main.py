@@ -111,32 +111,111 @@ async def get_resume(fid: str):
     except Exception as e:
         return {"error": str(e)}
 
+# async def extract_resume_info(text: str):
+#     """
+#     Extracts key details (name, skills, projects, experience, education) from resume text using Gemini API.
+#     """
+#     prompt = f"""
+#     Extract the following key details from the resume text:
+#     - Name
+#     - Skills
+#     - Projects
+#     - Experience
+#     - Education
+#     - Other important details
+
+#     Resume text:
+#     {text}
+
+#     Provide the output in **valid JSON format** without any additional text.
+#     """
+
+#     model = genai.GenerativeModel("gemini-1.5-flash")
+#     response = model.generate_content(prompt)
+
+#     # Print raw response for debugging
+#     print("🔹 Raw Response from Gemini:", response.text)
+
+#     # Remove triple backticks if present
+#     cleaned_response = response.text.strip().strip("```json").strip("```")
+
+#     try:
+#         extracted_info = json.loads(cleaned_response)
+#     except json.JSONDecodeError as e:
+#         return {"error": f"Invalid JSON response from Gemini: {str(e)}", "raw_response": cleaned_response}
+
+#     return extracted_info
+
+
 async def extract_resume_info(text: str):
     """
-    Extracts key details (name, skills, projects, experience, education) from resume text using Gemini API.
+    Extracts key details from resume text using Gemini API, enforcing a fixed JSON structure.
     """
     prompt = f"""
-    Extract the following key details from the resume text:
-    - Name
-    - Skills
-    - Projects
-    - Experience
-    - Education
-    - Other important details
+    You are an AI resume parser. Extract the following key details from the resume text below and provide the result in the exact JSON format given below.
 
     Resume text:
     {text}
 
-    Provide the output in **valid JSON format** without any additional text.
+    Follow this exact JSON structure:
+
+    {{
+    "Name": "",
+    "Skills": [],
+    "Projects": [
+        {{
+        "name": "",
+        "technologies": [],
+        "description": ""
+        }}
+    ],
+    "Experience": [
+        {{
+        "title": "",
+        "company": "",
+        "period": ""
+        }}
+    ],
+    "Education": [
+        {{
+        "degree": "",
+        "university": "",
+        "gpa": "",
+        "rank": ""
+        }}
+    ],
+    "Other important details": {{
+        "contact": {{
+        "phone": "",
+        "email": "",
+        "linkedin": "",
+        "github": ""
+        }},
+        "softSkills": [],
+        "achievements": [],
+        "certifications": [],
+        "researchPublication": "",
+        "languages": [],
+        "references": [
+        {{
+            "name": "",
+            "title": "",
+            "university": "",
+            "phone": "",
+            "email": ""
+        }}
+        ]
+    }}
+    }}
+
+    If any section is missing in the resume, leave it empty in the JSON output. **Only return JSON. No additional explanations or formatting.**
     """
 
     model = genai.GenerativeModel("gemini-1.5-flash")
     response = model.generate_content(prompt)
 
-    # Print raw response for debugging
     print("🔹 Raw Response from Gemini:", response.text)
 
-    # Remove triple backticks if present
     cleaned_response = response.text.strip().strip("```json").strip("```")
 
     try:
@@ -145,7 +224,6 @@ async def extract_resume_info(text: str):
         return {"error": f"Invalid JSON response from Gemini: {str(e)}", "raw_response": cleaned_response}
 
     return extracted_info
-
 
 @app.get("/extract-info/{resume_id}")
 async def extract_info(resume_id: str):
